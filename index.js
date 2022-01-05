@@ -4,6 +4,7 @@ const obj = {
   age: 18,
 };
 
+let activeReactFn = null;
 // 管理依赖的类
 class Depend {
   constructor() {
@@ -16,7 +17,16 @@ class Depend {
    * @param {*} dep
    */
   add(dep) {
-    this.depends.push(dep);
+    if (typeof dep === "function") {
+      this.depends.push(dep);
+    }
+  }
+
+  /**
+   * 收集依赖
+   */
+  depend() {
+    this.add(activeReactFn);
   }
 
   /**
@@ -28,7 +38,6 @@ class Depend {
 }
 
 // 封装依赖函数
-let activeReactFn = null
 function watchFn(fn) {
   activeReactFn = fn;
   fn();
@@ -60,7 +69,7 @@ const objProxy = new Proxy(obj, {
   get(target, key, receiver) {
     // 获取依赖对象
     const depend = getDepend(target, key);
-    depend.add(activeReactFn);
+    depend.depend();
     return Reflect.get(target, key, receiver);
   },
   set(target, key, value, receiver) {
@@ -79,10 +88,10 @@ const objProxy = new Proxy(obj, {
 // });
 
 watchFn(function () {
-  console.log("------------------------------------")
+  console.log("------------------------------------");
   console.log("执行了age" + objProxy.age);
   console.log("执行了name" + objProxy.name);
-  console.log("------------------------------------")
+  console.log("------------------------------------");
 });
 
 objProxy.name = "drr";
