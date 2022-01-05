@@ -28,26 +28,62 @@ class Depend {
 }
 
 // 封装依赖函数
-const depend = new Depend();
+let activeReactFn = null
 function watchFn(fn) {
-  depend.add(fn);
+  activeReactFn = fn;
+  fn();
+  activeReactFn = null;
+}
+
+/**
+ * 获取依赖对象
+ * @param {*} target
+ * @param {*} key
+ */
+const targetMap = new WeakMap();
+function getDepend(target, key) {
+  let map = targetMap.get(target);
+  if (!map) {
+    map = new Map();
+    targetMap.set(target, map);
+  }
+  let depend = map.get(key);
+  if (!depend) {
+    depend = new Depend();
+    map.set(key, depend);
+  }
+  return depend;
 }
 
 // 代理对象
 const objProxy = new Proxy(obj, {
   get(target, key, receiver) {
+    // 获取依赖对象
+    const depend = getDepend(target, key);
+    depend.add(activeReactFn);
     return Reflect.get(target, key, receiver);
   },
   set(target, key, value, receiver) {
     Reflect.set(target, key, value, receiver);
+    const depend = getDepend(target, key);
     depend.notify();
   },
 });
 
+// watchFn(function () {
+//   console.log("执行了name" + objProxy.name);
+// });
+
+// watchFn(function () {
+//   console.log("执行了age" + objProxy.age);
+// });
+
 watchFn(function () {
-  console.log(objProxy.name);
-  console.log("执行了");
+  console.log("------------------------------------")
+  console.log("执行了age" + objProxy.age);
+  console.log("执行了name" + objProxy.name);
+  console.log("------------------------------------")
 });
 
 objProxy.name = "drr";
-objProxy.age = 20;
+// objProxy.age = 20;
