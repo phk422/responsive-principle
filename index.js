@@ -9,7 +9,7 @@ let activeReactFn = null;
 class Depend {
   constructor() {
     //存放要执行的函数
-    this.depends = [];
+    this.depends = new Set();
   }
 
   /**
@@ -18,7 +18,7 @@ class Depend {
    */
   add(dep) {
     if (typeof dep === "function") {
-      this.depends.push(dep);
+      this.depends.add(dep);
     }
   }
 
@@ -90,6 +90,8 @@ const objProxy = new Proxy(obj, {
 watchFn(function () {
   console.log("------------------------------------");
   console.log("执行了age" + objProxy.age);
+  console.log("执行了name" + objProxy.name);
+  console.log("执行了name" + objProxy.name);
   console.log("执行了name" + objProxy.name);
   console.log("------------------------------------");
 });
