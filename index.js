@@ -1,9 +1,3 @@
-// 原始对象
-const obj = {
-  name: "phk",
-  age: 18,
-};
-
 let activeReactFn = null;
 // 管理依赖的类
 class Depend {
@@ -64,20 +58,27 @@ function getDepend(target, key) {
   return depend;
 }
 
-// 代理对象
-const objProxy = new Proxy(obj, {
-  get(target, key, receiver) {
-    // 获取依赖对象
-    const depend = getDepend(target, key);
-    depend.depend();
-    return Reflect.get(target, key, receiver);
-  },
-  set(target, key, value, receiver) {
-    Reflect.set(target, key, value, receiver);
-    const depend = getDepend(target, key);
-    depend.notify();
-  },
-});
+// 对象响应式方法
+function reactive(obj) {
+  return new Proxy(obj, {
+    get(target, key, receiver) {
+      // 获取依赖对象
+      const depend = getDepend(target, key);
+      depend.depend();
+      return Reflect.get(target, key, receiver);
+    },
+    set(target, key, value, receiver) {
+      Reflect.set(target, key, value, receiver);
+      const depend = getDepend(target, key);
+      depend.notify();
+    },
+  });
+}
+
+const objProxy = reactive({
+  name: "phk",
+  age: 18,
+})
 
 // watchFn(function () {
 //   console.log("执行了name" + objProxy.name);
@@ -97,4 +98,4 @@ watchFn(function () {
 });
 
 objProxy.name = "drr";
-// objProxy.age = 20;
+objProxy.age = 20;
