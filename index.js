@@ -58,7 +58,7 @@ function getDepend(target, key) {
   return depend;
 }
 
-// 对象响应式方法
+// 对象响应式方法（Vue3基于proxy实现）
 function reactive(obj) {
   return new Proxy(obj, {
     get(target, key, receiver) {
@@ -75,10 +75,31 @@ function reactive(obj) {
   });
 }
 
-const objProxy = reactive({
+// Vue2的实现(ES6之前)
+function _reactive(obj) {
+  Object.keys(obj).forEach((key) => {
+    let value = obj[key];
+    Object.defineProperty(obj, key, {
+      get() {
+        // 获取依赖对象
+        const depend = getDepend(obj, key);
+        depend.depend();
+        return value;
+      },
+      set(newValue) {
+        value = newValue;
+        const depend = getDepend(obj, key);
+        depend.notify();
+      },
+    });
+  });
+  return obj;
+}
+
+const objProxy = _reactive({
   name: "phk",
   age: 18,
-})
+});
 
 // watchFn(function () {
 //   console.log("执行了name" + objProxy.name);
